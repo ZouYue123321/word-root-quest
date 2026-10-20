@@ -16,7 +16,7 @@
       <div>
         <p class="kicker">每天 5 个词根 · 10 分钟</p>
         <h1>拆开一个词根，<br>认识一串单词。</h1>
-        <p class="sub">按「前缀 → 核心词根 → 后缀」三站闯关。每关先学 5 个词根，再做小测，答对 80% 解锁下一关。</p>
+        <p class="sub">按「前缀 → 核心词根 → 后缀」三站闯关。每关先学 5 个词根，再玩两个热身小游戏，最后做小测，答对 80% 解锁下一关。</p>
       </div>
       <div class="stats">
         <div class="stat fire"><span id="streak">0</span><small>连续打卡（天）</small></div>
@@ -32,6 +32,11 @@
     <div class="bar"><button class="ghost" data-go="map">← 地图</button><div class="prog"><i id="lp"></i></div><span id="lcount"></span></div>
     <div id="card" class="card"></div>
     <div class="actions"><button class="ghost" id="prev">上一个</button><button class="primary" id="next">下一个</button></div>
+  </section>
+
+  <section id="v-play" class="view hidden">
+    <div class="bar"><button class="ghost" data-go="map">← 地图</button><div class="prog"><i id="pp"></i></div><span id="pcount"></span></div>
+    <div id="play" class="card play"></div>
   </section>
 
   <section id="v-quiz" class="view hidden">

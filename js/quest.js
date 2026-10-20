@@ -49,9 +49,11 @@ function drawCard(){const r=L.roots[li];
  $('#lp').style.width=((li+1)/L.roots.length*100)+'%';$('#lcount').textContent=`${li+1}/${L.roots.length}`;
  $('#card').innerHTML=`<p class="root">${esc(r.root)}</p><p class="mean">${esc(r.meaning)}</p><p class="desc">${esc(r.description)}</p><div class="ex">${r.examples.map(e=>`<div><b>${hl({...e,root:r.root})}</b><small>${esc(e.meaning)} · ${esc(e.explanation)}</small></div>`).join('')}</div>`;
  $('#prev').disabled=li===0;$('#next').textContent=li===L.roots.length-1?'开始小测 →':'下一个';}
+function keyIdx(e){const p=[e.breakdown.prefix,e.breakdown.root,e.breakdown.suffix].filter(Boolean),keys=String(e.root||'').toLowerCase().split('/').map(k=>k.replace(/-/g,''));let m=p.findIndex(x=>keys.some(k=>k&&(x.toLowerCase()===k||x.toLowerCase().startsWith(k)||k.startsWith(x.toLowerCase()))));return m}
 function hl(e){const w=esc(e.word),p=[e.breakdown.prefix,e.breakdown.root,e.breakdown.suffix].filter(Boolean),keys=String(e.root||'').toLowerCase().split('/').map(k=>k.replace(/-/g,''));if(!p.length)return w;let m=p.findIndex(x=>keys.some(k=>k&&(x.toLowerCase()===k||x.toLowerCase().startsWith(k)||k.startsWith(x.toLowerCase()))));if(m<0)m=p.indexOf(e.breakdown.root);return p.map((x,i)=>i===m?`<em>${esc(x)}</em>`:esc(x)).join('·')}
 $('#prev').onclick=()=>{if(li>0){li--;drawCard()}};
-$('#next').onclick=()=>{if(li<L.roots.length-1){li++;drawCard()}else quiz(L.roots.flatMap(r=>r.examples.slice(0,2).map(e=>({...e,root:r.root,rootMean:r.meaning}))),'level')};
+$('#next').onclick=()=>{if(li<L.roots.length-1){li++;drawCard()}else warm()};
+const levelQuiz=()=>quiz(L.roots.flatMap(r=>r.examples.slice(0,2).map(e=>({...e,root:r.root,rootMean:r.meaning}))),'level');
 
 // 小测：看拆分选中文意思（干扰项来自其它词根的例词）
 let Q,qi,score,mode;
@@ -74,6 +76,34 @@ function finish(){const r=score/Q.length;let st=0,h;
  const pass=mode!=='level'||st>0;
  h=`<p class="big">${pass?'🎉':'💪'}</p><h2>${mode==='level'?(pass?`第 ${L.idx+1} 关通过！`:'差一点点'):'复习完成'}</h2>${mode==='level'?`<div class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>`:''}<p class="sub">答对 ${score}/${Q.length}${mode==='level'&&!pass?`，需要 ${Math.ceil(Q.length*PASS)} 题才能解锁下一关`:''} · 错词本里还有 ${Object.keys(S.wrong).length} 个词</p><div class="actions" style="justify-content:center;gap:12px">${mode==='level'&&!pass?`<button class="ghost" id="retry">再学一遍</button>`:''}<button class="primary" data-go="map">回到地图</button></div>`;
  $('#result').innerHTML=h;show('result');const rt=$('#retry');if(rt)rt.onclick=()=>learn(L.idx)}
+
+// 闯关前先玩一玩：①拼词块（按 前缀/词根/后缀 拼出单词）②补词根（遮住本关前缀/词根/后缀的字母，凭词根意思补全）。
+// 每个词根取一个「拆分能完整拼回原词」的例词；热身不计星、不进错词本，只给分层提示。
+let G,gi,gt;
+function warm(){const pick=L.roots.map(r=>{const e=r.examples.find(e=>{const b=e.breakdown;return b.root&&((b.prefix||'')+(b.root||'')+(b.suffix||''))===e.word&&[b.prefix,b.root,b.suffix].filter(Boolean).length>=2&&keyIdx({...e,root:r.root})>=0});return e&&{...e,root:r.root,rootMean:r.meaning}}).filter(Boolean);
+ if(pick.length<2){levelQuiz();return}
+ G=[...pick.map(it=>({type:'build',it})),...shuffle(pick).map(it=>({type:'fill',it}))];gi=0;gt={};show('play');drawG()}
+function drawG(){const {type,it}=G[gi],b=it.breakdown,parts=[b.prefix,b.root,b.suffix].filter(Boolean);if(gt.m==null)gt.m=type==='fill'?keyIdx(it):0;const ans=parts[gt.m];
+ $('#pp').style.width=(gi/G.length*100)+'%';$('#pcount').textContent=`${gi+1}/${G.length}`;
+ const head=`<div class="gtag">闯关前先玩一玩 · ${type==='build'?'① 拼词块':'② 补词根'}</div>`;
+ let h;
+ if(type==='build'){if(!gt.pool){gt.pool=shuffle(parts.map((p,k)=>({p,k})));if(gt.pool.every((x,k)=>x.k===k)&&parts.length>1)gt.pool.reverse();gt.got=[]}
+  h=`${head}<h3>把词块按顺序点一遍，拼出这个词</h3><p class="gmean">${esc(it.meaning)}</p><p class="hint">词根 <b>${esc(it.root)}</b> = ${esc(it.rootMean)}</p>
+  <div class="slots">${parts.map((p,k)=>`<span class="${gt.got[k]!=null?'fill':''}">${gt.got[k]!=null?esc(parts[k]):'？'}</span>`).join('<i>+</i>')}</div>
+  <div class="chips">${gt.pool.map((x,k)=>`<button class="chip" data-c="${k}" ${x.used?'disabled':''}>${esc(x.p)}</button>`).join('')}</div>`}
+ else{const m=gt.m,pre=parts.slice(0,m).join(''),suf=parts.slice(m+1).join(''),ans=parts[m];
+  h=`${head}<h3>本关的${{prefix:'前缀',root:'词根',suffix:'后缀'}[L.stage]}被遮住了，凭它的意思补出来</h3><p class="gmean">${esc(it.meaning)}</p><p class="hint">被遮住的部分表示「${esc(it.rootMean)}」</p>
+  <div class="mask"><span>${esc(pre)}</span><input id="gin" maxlength="${ans.length}" size="${ans.length}" style="width:${ans.length*0.75+0.6}em" autocomplete="off" value="${esc(gt.v||'')}"><span>${esc(suf)}</span></div>`}
+ h+=`<div id="gfb">${gt.fb?`<div class="fb ${gt.done?'ok':'no'}"><span>${gt.fb}</span></div>`:''}</div><div class="actions"><button class="ghost" id="gskip">跳过热身，直接小测</button>${gt.done?`<button class="primary" id="gnext">${gi===G.length-1?'开始小测 →':'下一个 →'}</button>`:(type==='fill'?`<button class="ghost" id="ghint">给我一点提示</button><button class="primary" id="gchk">检查</button>`:'')}</div>`;
+ $('#play').innerHTML=h;
+ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const x=gt.pool[+c.dataset.c],need=gt.got.length;if(gt.done)return;
+  if(x.k===need){x.used=true;gt.got.push(x.k);gt.fb=null;if(gt.got.length===parts.length){gt.done=true;gt.fb=`✓ ${parts.map(esc).join(' + ')} = <b>${esc(it.word)}</b>（${esc(it.explanation)}）`}}
+  else{gt.miss=(gt.miss||0)+1;gt.fb=gt.miss===1?`顺序不对：先想想哪一块排在${need===0?'最前面':'它后面'}。`:`下一块是「${esc(parts[need])}」。`}drawG()});
+ const gin=$('#gin');if(gin){gin.focus();gin.oninput=()=>gt.v=gin.value;gin.onkeydown=e=>{if(e.key==='Enter')gt.done?$('#gnext').click():$('#gchk').click()}}
+ if($('#gchk'))$('#gchk').onclick=()=>{const v=(gt.v||'').trim().toLowerCase();if(!v)return;if(v===ans.toLowerCase()){gt.done=true;gt.fb=`✓ ${esc(it.word)}：${hl(it)}（${esc(it.explanation)}）`}else gt.fb=`还不对。再看看词根 ${esc(it.root)}，它表示「${esc(it.rootMean)}」。`;drawG()};
+ if($('#ghint'))$('#ghint').onclick=()=>{gt.h=(gt.h||0)+1;const n=Math.min(gt.h,ans.length);gt.fb=`前 ${n} 个字母：<b>${esc(ans.slice(0,n))}</b>…`;drawG()};
+ if($('#gnext'))$('#gnext').onclick=()=>{gi++;gt={};gi<G.length?drawG():levelQuiz()};
+ $('#gskip').onclick=levelQuiz}
 
 // 错词本
 function renderWrong(){const ws=Object.values(S.wrong);$('#wrongN').textContent=ws.length;
