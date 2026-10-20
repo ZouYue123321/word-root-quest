@@ -1,210 +1,55 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>词根词缀记忆工坊</title>
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="css/minimal.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词根闯关 · 给初中生的单词冒险</title>
+<link rel="stylesheet" href="css/quest.css">
 </head>
 <body>
-
-  <!-- 极简导航 -->
-  <nav class="nav">
-    <div class="nav-container">
-      <a href="index.html" class="nav-logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
-        词根词缀记忆工坊
-      </a>
-      <div class="nav-links">
-        <a href="learn.html" class="nav-link">学习</a>
-        <a href="flashcard.html" class="nav-link">闪卡</a>
-        <a href="roots.html" class="nav-link">索引</a>
-        <a href="progress.html" class="nav-link">进度</a>
+<header class="top">
+  <a class="brand" href="index.html"><span class="logo">词</span><b>词根闯关</b></a>
+  <nav><a href="#" data-go="map" class="on">地图</a><a href="#" data-go="wrong">错词本 <i id="wrongN">0</i></a><a href="roots.html">词根库</a></nav>
+</header>
+<main id="app">
+  <section id="v-map" class="view">
+    <div class="hero">
+      <div>
+        <p class="kicker">每天 5 个词根 · 10 分钟</p>
+        <h1>拆开一个词根，<br>认识一串单词。</h1>
+        <p class="sub">按「前缀 → 核心词根 → 后缀」三站闯关。每关先学 5 个词根，再做小测，答对 80% 解锁下一关。</p>
+      </div>
+      <div class="stats">
+        <div class="stat fire"><span id="streak">0</span><small>连续打卡（天）</small></div>
+        <div class="stat"><span id="stars">0</span><small>获得星星</small></div>
+        <div class="stat"><span id="cleared">0</span><small>已通关</small></div>
+        <div class="week" id="week"></div>
       </div>
     </div>
-  </nav>
-
-  <!-- Hero Section - 超大留白 -->
-  <section class="hero">
-    <div class="container">
-
-      <!-- 主标题 -->
-      <h1 class="hero-title">
-        每天10分钟<br>
-        90天后你会认识<br>
-        30,000个单词
-      </h1>
-
-      <!-- 副标题 -->
-      <p class="hero-subtitle">
-        300个词根 = 30,000个单词的钥匙
-      </p>
-
-      <!-- 动态词根演示 -->
-      <div class="demo">
-        <div class="demo-word">
-          <span id="demoWord">inspect</span>
-        </div>
-
-        <div class="demo-breakdown">
-          <div class="demo-part prefix">
-            <span id="demoPrefix">in</span>
-            <span class="text-secondary">向内</span>
-          </div>
-          <span class="demo-arrow">+</span>
-          <div class="demo-part root">
-            <span id="demoRoot">spect</span>
-            <span class="text-secondary">看</span>
-          </div>
-        </div>
-
-        <div class="demo-meaning">
-          <span class="demo-arrow">→</span>
-          <span id="demoMeaning">向内看 = 检查</span>
-        </div>
-      </div>
-
-      <!-- CTA按钮组 -->
-      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <a href="learn.html" class="btn btn-primary btn-large">
-          开始第一个词根 →
-        </a>
-        <a href="flashcard.html" class="btn btn-large" style="background: white; border: 2px solid var(--color-border); color: var(--color-text);">
-          闪卡复习
-        </a>
-      </div>
-
-      <!-- 底部小字 -->
-      <p class="text-secondary mt-xl" style="font-size: 0.875rem;">
-        300个词根 · 免费使用 · 无需注册
-      </p>
-
-    </div>
+    <div id="stages"></div>
   </section>
 
-  <!-- 简单统计（可选，保留在首屏以下） -->
-  <section style="padding: 96px 24px; background: #F8FAFC;">
-    <div class="container">
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-value">300</div>
-          <div class="stat-label">核心词根</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">30,000</div>
-          <div class="stat-label">可推导单词</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">10<span style="font-size: 2rem; margin-left: 4px;">分钟</span></div>
-          <div class="stat-label">每日学习</div>
-        </div>
-      </div>
-    </div>
+  <section id="v-learn" class="view hidden">
+    <div class="bar"><button class="ghost" data-go="map">← 地图</button><div class="prog"><i id="lp"></i></div><span id="lcount"></span></div>
+    <div id="card" class="card"></div>
+    <div class="actions"><button class="ghost" id="prev">上一个</button><button class="primary" id="next">下一个</button></div>
   </section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <p>词根词缀记忆工坊 · 像搭积木一样记单词</p>
-      <div class="footer-links">
-        <a href="https://github.com" class="footer-link" target="_blank">GitHub</a>
-        <a href="https://x.com/vista8" class="footer-link" target="_blank">@vista8</a>
-      </div>
-    </div>
-  </footer>
+  <section id="v-quiz" class="view hidden">
+    <div class="bar"><button class="ghost" data-go="map">← 退出</button><div class="prog"><i id="qp"></i></div><span id="qcount"></span></div>
+    <div id="q" class="card quiz"></div>
+  </section>
 
-  <!-- 动态词根演示脚本 -->
-  <script>
-    const examples = [
-      {
-        word: 'inspect',
-        prefix: 'in',
-        prefixMeaning: '向内',
-        root: 'spect',
-        rootMeaning: '看',
-        meaning: '向内看 = 检查'
-      },
-      {
-        word: 'respect',
-        prefix: 're',
-        prefixMeaning: '再',
-        root: 'spect',
-        rootMeaning: '看',
-        meaning: '再看 = 尊重'
-      },
-      {
-        word: 'transport',
-        prefix: 'trans',
-        prefixMeaning: '穿过',
-        root: 'port',
-        rootMeaning: '带',
-        meaning: '带过去 = 运输'
-      },
-      {
-        word: 'export',
-        prefix: 'ex',
-        prefixMeaning: '向外',
-        root: 'port',
-        rootMeaning: '带',
-        meaning: '带出去 = 出口'
-      },
-      {
-        word: 'predict',
-        prefix: 'pre',
-        prefixMeaning: '提前',
-        root: 'dict',
-        rootMeaning: '说',
-        meaning: '提前说 = 预测'
-      }
-    ];
+  <section id="v-result" class="view hidden"><div class="card result" id="result"></div></section>
 
-    let currentIndex = 0;
-
-    function updateDemo() {
-      const example = examples[currentIndex];
-
-      // 淡出效果
-      const demoElement = document.querySelector('.demo');
-      demoElement.style.opacity = '0';
-      demoElement.style.transform = 'translateY(10px)';
-
-      setTimeout(() => {
-        // 更新内容
-        document.getElementById('demoWord').textContent = example.word;
-        document.getElementById('demoPrefix').textContent = example.prefix;
-        document.getElementById('demoRoot').textContent = example.root;
-        document.getElementById('demoMeaning').textContent = example.meaning;
-
-        // 更新中文解释
-        const prefixPart = document.querySelector('.demo-part.prefix .text-secondary');
-        const rootPart = document.querySelector('.demo-part.root .text-secondary');
-        if (prefixPart) prefixPart.textContent = example.prefixMeaning;
-        if (rootPart) rootPart.textContent = example.rootMeaning;
-
-        // 淡入效果
-        demoElement.style.transition = 'all 400ms cubic-bezier(0.4, 0, 0.2, 1)';
-        demoElement.style.opacity = '1';
-        demoElement.style.transform = 'translateY(0)';
-
-        currentIndex = (currentIndex + 1) % examples.length;
-      }, 400);
-    }
-
-    // 每4秒切换一次
-    setInterval(updateDemo, 4000);
-
-    // 初始化过渡效果
-    document.querySelector('.demo').style.transition = 'all 400ms cubic-bezier(0.4, 0, 0.2, 1)';
-  </script>
-
+  <section id="v-wrong" class="view hidden">
+    <div class="bar"><button class="ghost" data-go="map">← 地图</button><h2>错词本</h2><span></span></div>
+    <p class="sub">做错的词会自动收进来。复习时连续答对 2 次，就会被移出错词本。</p>
+    <div id="wlist"></div>
+    <div class="actions"><button class="primary" id="wreview">开始复习</button></div>
+  </section>
+</main>
+<footer class="foot">基于 <a href="https://github.com/joeseesun/word-root-workshop" target="_blank" rel="noopener">word-root-workshop</a>（MIT，作者 乔帮主）改造 · 学习数据只保存在你的浏览器里</footer>
+<script src="js/wordData.js"></script>
+<script src="js/quest.js"></script>
 </body>
 </html>
